@@ -234,3 +234,16 @@ body {
     animation: none;
   }
 }
+
+/* Inline fritz — type {Fritz} in the editor and a little cat appears in the
+   text. Drawn as a mask so it takes the current text colour and font size. */
+.fritz-inline {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  vertical-align: -0.32em;
+  margin: 0 0.06em;
+}
+.fritz-nodeview {
+  display: inline;
+}

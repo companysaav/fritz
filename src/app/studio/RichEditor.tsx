@@ -8,6 +8,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { FritzInline } from "./FritzInline";
 
 /** Bleed-through palette — applied as inline colour to the selection. */
 const COLORS: { key: string; hex: string }[] = [
@@ -39,6 +40,7 @@ export function RichEditor({
       Color,
       Image,
       Youtube.configure({ width: 640, height: 360, nocookie: true }),
+      FritzInline,
     ],
     content: initialHTML || "<p></p>",
     editorProps: {
@@ -175,6 +177,14 @@ export function RichEditor({
           className={btn(false)}
         >
           {uploading ? "uploading…" : "🖼 image"}
+        </button>
+        <button
+          type="button"
+          title="insert fritz (or just type {fritz})"
+          onClick={() => editor.chain().focus().insertContent({ type: "fritz" }).run()}
+          className={btn(false)}
+        >
+          🐱 fritz
         </button>
         <button
           type="button"

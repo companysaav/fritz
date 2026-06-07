@@ -3,6 +3,7 @@ import { Fragment, type ReactNode } from "react";
 
 import type { Block, Doc } from "@/lib/content/types";
 import { MascotEyes } from "@/components/site/Mascot";
+import { InlineFritz } from "@/components/site/InlineFritz";
 
 /** Allowed bleed-through tag colours (skills / classes / system text). */
 const BLEED = new Set(["gold", "ember", "frost", "void", "jade", "rose", "ash"]);
@@ -14,7 +15,7 @@ const BLEED = new Set(["gold", "ember", "frost", "void", "jade", "rose", "ash"])
 function inline(text: string): ReactNode {
   const nodes: ReactNode[] = [];
   const regex =
-    /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\(([^)]+)\)|\[([^\]]+)\](?:\s*\{(\w+)\})?)/g;
+    /(\*\*([^*]+)\*\*|\*([^*]+)\*|\[([^\]]+)\]\(([^)]+)\)|\[([^\]]+)\](?:\s*\{(\w+)\})?|(\{[Ff]ritz\}))/g;
   let last = 0;
   let m: RegExpExecArray | null;
   let k = 0;
@@ -35,6 +36,8 @@ function inline(text: string): ReactNode {
           [{m[6]}]
         </span>,
       );
+    } else if (m[8]) {
+      nodes.push(<InlineFritz key={k++} />);
     }
     last = m.index + m[0].length;
   }
