@@ -1,65 +1,102 @@
-import Image from "next/image";
+import Link from "next/link";
 
-export default function Home() {
+import { display } from "@/lib/fonts";
+import { getFeaturedNovel, getPosts } from "@/lib/queries";
+import { ButtonLink } from "@/components/ui/Button";
+import { Mascot, MascotEyes } from "@/components/site/Mascot";
+import { NovelCard } from "@/components/cards/NovelCard";
+import { PostCard } from "@/components/cards/PostCard";
+import { Subscribe } from "@/components/site/Subscribe";
+
+export default async function Home() {
+  const [novel, posts] = await Promise.all([getFeaturedNovel(), getPosts(3)]);
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <>
+      {/* hero */}
+      <section className="mx-auto max-w-6xl px-5 pt-16 pb-20 sm:pt-24">
+        <div className="flex flex-col items-start gap-8">
+          <span className="flex items-center gap-2 rounded-full border border-line bg-paper-2 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-ink-soft">
+            <MascotEyes className="h-3 w-6" /> a reading house
+          </span>
+          <h1
+            className={`${display.className} max-w-4xl text-5xl leading-[0.95] lowercase text-ink sm:text-7xl`}
+          >
+            stories, told <span className="text-ember">properly</span>.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+          <p className="max-w-xl text-lg leading-relaxed text-ink-soft">
+            Serialized novels and essays where the words come first and the
+            media — sound, picture, film — is woven in, not bolted on. Pull up a
+            chair. fritz has been waiting.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <ButtonLink href="/novels" variant="primary">
+              Start the novel
+            </ButtonLink>
+            <ButtonLink href="/writing" variant="ghost">
+              Read the writing
+            </ButtonLink>
+          </div>
+        </div>
+      </section>
+
+      {/* featured novel */}
+      {novel && (
+        <section className="border-y border-line bg-paper-2 py-16">
+          <div className="mx-auto max-w-6xl px-5">
+            <div className="mb-8 flex items-end justify-between">
+              <h2 className="font-display text-3xl lowercase text-ink">
+                the novel
+              </h2>
+              <Link
+                href="/novels"
+                className="text-sm font-bold text-ember hover:underline"
+              >
+                all novels →
+              </Link>
+            </div>
+            <NovelCard novel={novel} />
+          </div>
+        </section>
+      )}
+
+      {/* latest writing */}
+      {posts.length > 0 && (
+        <section className="mx-auto max-w-6xl px-5 py-16">
+          <div className="mb-8 flex items-end justify-between">
+            <h2 className="font-display text-3xl lowercase text-ink">
+              latest writing
+            </h2>
+            <Link
+              href="/writing"
+              className="text-sm font-bold text-ember hover:underline"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+              everything →
+            </Link>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post) => (
+              <PostCard key={post.slug} post={post} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* fritz aside */}
+      <section className="mx-auto max-w-3xl px-5 py-12">
+        <div className="flex items-center gap-6 rounded-2xl border-2 border-dashed border-mustard bg-mustard/10 p-8">
+          <Mascot size={72} className="shrink-0 text-ink" />
+          <p className="font-display text-xl lowercase leading-snug text-ink">
+            “a story you can hear, see and fall into. that&apos;s the whole
+            idea.” <span className="text-muted">— fritz</span>
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      {/* subscribe */}
+      <section className="mx-auto max-w-3xl px-5 pb-8">
+        <Subscribe />
+      </section>
+    </>
   );
 }
