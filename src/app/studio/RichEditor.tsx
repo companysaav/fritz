@@ -5,7 +5,7 @@ import { Image } from "@tiptap/extension-image";
 import { Youtube } from "@tiptap/extension-youtube";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import { FritzInline } from "./FritzInline";
@@ -24,9 +24,12 @@ const COLORS: { key: string; hex: string }[] = [
 export function RichEditor({
   initialHTML = "",
   dropcap = false,
+  anchors = false,
 }: {
   initialHTML?: string;
   dropcap?: boolean;
+  /** wire the chapter editor to the notebook: pin notes to a passage + jump to one. */
+  anchors?: boolean;
 }) {
   const [html, setHtml] = useState(initialHTML);
   const [uploading, setUploading] = useState(false);
@@ -50,6 +53,39 @@ export function RichEditor({
     },
     onUpdate: ({ editor }) => setHtml(editor.getHTML()),
   });
+
+  // Notebook ↔ editor bridge: jump to (and flash-select) a note's anchored
+  // passage when the reader clicks "jump ↑" on an anchored note.
+  useEffect(() => {
+    if (!editor || !anchors) return;
+    const onJump = (e: Event) => {
+      const raw = (e as CustomEvent<{ anchor?: string }>).detail?.anchor;
+      const needle = (raw ?? "").trim().slice(0, 80);
+      if (!needle) return;
+      let from = -1;
+      editor.state.doc.descendants((node, pos) => {
+        if (from >= 0) return false;
+        if (node.isText && node.text) {
+          const idx = node.text.indexOf(needle);
+          if (idx >= 0) from = pos + idx;
+        }
+        return true;
+      });
+      if (from < 0) {
+        window.alert("fritz can't find that passage — it may have changed.");
+        return;
+      }
+      editor
+        .chain()
+        .focus()
+        .setTextSelection({ from, to: from + needle.length })
+        .scrollIntoView()
+        .run();
+    };
+    window.addEventListener("fritz:jump-note", onJump as EventListener);
+    return () =>
+      window.removeEventListener("fritz:jump-note", onJump as EventListener);
+  }, [editor, anchors]);
 
   if (!editor) {
     return (
@@ -186,6 +222,26 @@ export function RichEditor({
         >
           🐱 fritz
         </button>
+        {anchors && (
+          <button
+            type="button"
+            title="pin a note to the selected passage"
+            onClick={() => {
+              const { from, to } = editor.state.selection;
+              const text = editor.state.doc.textBetween(from, to, " ").trim();
+              if (!text) {
+                window.alert("select a passage first, then pin a note to it.");
+                return;
+              }
+              window.dispatchEvent(
+                new CustomEvent("fritz:new-note", { detail: { anchor: text } }),
+              );
+            }}
+            className={btn(false)}
+          >
+            📌 note
+          </button>
+        )}
         <button
           type="button"
           onClick={() => {

@@ -5,6 +5,9 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
 import { saveNovel } from "@/app/studio/actions";
+import { NotesPanel } from "@/app/studio/notes/NotesPanel";
+import { NoteRollup, type RollupChapter } from "@/app/studio/notes/NoteRollup";
+import { NOTE_COLUMNS, type Note } from "@/app/studio/notes/types";
 
 const STATUSES = ["ongoing", "hiatus", "completed", "draft"];
 
@@ -44,6 +47,47 @@ export default async function EditNovel({
     .select("id, title, number, status")
     .eq("novel_id", id)
     .order("number", { ascending: true });
+
+  const chapterList = (chapters ?? []) as {
+    id: string;
+    title: string;
+    number: number | null;
+    status: string;
+  }[];
+
+  // The novel's own notes, plus every chapter's notes rolled up into one digest.
+  const chapterIds = chapterList.map((c) => c.id);
+  const [{ data: novelNotes }, { data: chNotes }] = await Promise.all([
+    supabase
+      .from("notes")
+      .select(NOTE_COLUMNS)
+      .eq("subject_type", "novel")
+      .eq("subject_id", id)
+      .order("pinned", { ascending: false })
+      .order("updated_at", { ascending: false }),
+    chapterIds.length
+      ? supabase
+          .from("notes")
+          .select(NOTE_COLUMNS)
+          .eq("subject_type", "chapter")
+          .in("subject_id", chapterIds)
+          .order("pinned", { ascending: false })
+          .order("updated_at", { ascending: false })
+      : Promise.resolve({ data: [] as Note[] }),
+  ]);
+
+  const notesByChapter = new Map<string, Note[]>();
+  for (const n of (chNotes ?? []) as Note[]) {
+    const arr = notesByChapter.get(n.subject_id) ?? [];
+    arr.push(n);
+    notesByChapter.set(n.subject_id, arr);
+  }
+  const rollup: RollupChapter[] = chapterList.map((c) => ({
+    id: c.id,
+    title: c.title,
+    number: c.number,
+    notes: notesByChapter.get(c.id) ?? [],
+  }));
 
   return (
     <>
@@ -101,6 +145,12 @@ export default async function EditNovel({
         </label>
       </Editor>
 
+      <NotesPanel
+        subjectType="novel"
+        subjectId={novel.id}
+        initialNotes={(novelNotes ?? []) as Note[]}
+      />
+
       <section className="mx-auto max-w-5xl px-5 pb-16">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-2xl lowercase text-ink">chapters</h2>
@@ -112,17 +162,10 @@ export default async function EditNovel({
           </Link>
         </div>
         <ul className="divide-y divide-line rounded-2xl border border-line bg-paper">
-          {(chapters ?? []).length === 0 && (
+          {chapterList.length === 0 && (
             <li className="px-5 py-4 text-sm text-muted">no chapters yet.</li>
           )}
-          {(
-            (chapters ?? []) as {
-              id: string;
-              title: string;
-              number: number | null;
-              status: string;
-            }[]
-          ).map((c) => (
+          {chapterList.map((c) => (
             <li key={c.id} className="px-5 py-4">
               <Link
                 href={`/studio/chapters/${c.id}`}
@@ -135,6 +178,8 @@ export default async function EditNovel({
           ))}
         </ul>
       </section>
+
+      <NoteRollup chapters={rollup} />
     </>
   );
 }

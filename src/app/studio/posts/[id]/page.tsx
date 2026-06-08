@@ -6,6 +6,8 @@ import { blocksToHtml } from "@/lib/content/blocksToHtml";
 import { createClient } from "@/lib/supabase/server";
 import { Editor, Field } from "@/app/studio/Editor";
 import { savePost } from "@/app/studio/actions";
+import { NotesPanel } from "@/app/studio/notes/NotesPanel";
+import { NOTE_COLUMNS, type Note } from "@/app/studio/notes/types";
 
 export default async function EditPost({
   params,
@@ -33,7 +35,16 @@ export default async function EditPost({
     cover: { url: string | null } | null;
   };
 
+  const { data: notes } = await supabase
+    .from("notes")
+    .select(NOTE_COLUMNS)
+    .eq("subject_type", "post")
+    .eq("subject_id", post.id)
+    .order("pinned", { ascending: false })
+    .order("updated_at", { ascending: false });
+
   return (
+    <>
     <Editor
       action={savePost}
       id={post.id}
@@ -58,5 +69,11 @@ export default async function EditPost({
         type="datetime-local"
       />
     </Editor>
+    <NotesPanel
+      subjectType="post"
+      subjectId={post.id}
+      initialNotes={(notes ?? []) as Note[]}
+    />
+    </>
   );
 }

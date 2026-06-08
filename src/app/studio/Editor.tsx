@@ -13,6 +13,7 @@ export function Editor({
   dropcap = false,
   hideStatus = false,
   hideBody = false,
+  anchors = false,
   children,
 }: {
   action: (formData: FormData) => void | Promise<void>;
@@ -25,6 +26,8 @@ export function Editor({
   dropcap?: boolean;
   hideStatus?: boolean;
   hideBody?: boolean;
+  /** enable passage-anchored notes (the chapter editor) */
+  anchors?: boolean;
   children?: ReactNode;
 }) {
   return (
@@ -43,7 +46,9 @@ export function Editor({
           placeholder="Title…"
           className="w-full bg-transparent font-display text-4xl lowercase text-ink outline-none placeholder:text-muted"
         />
-        {!hideBody && <RichEditor initialHTML={body} dropcap={dropcap} />}
+        {!hideBody && (
+          <RichEditor initialHTML={body} dropcap={dropcap} anchors={anchors} />
+        )}
       </div>
 
       {/* sidebar */}

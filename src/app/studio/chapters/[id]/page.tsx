@@ -6,6 +6,8 @@ import { blocksToHtml } from "@/lib/content/blocksToHtml";
 import { createClient } from "@/lib/supabase/server";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
 import { saveChapter } from "@/app/studio/actions";
+import { NotesPanel } from "@/app/studio/notes/NotesPanel";
+import { NOTE_COLUMNS, type Note } from "@/app/studio/notes/types";
 
 export default async function EditChapter({
   params,
@@ -40,7 +42,16 @@ export default async function EditChapter({
     ? (ch.soundtrack[0]?.youtube ?? "")
     : "";
 
+  const { data: notes } = await supabase
+    .from("notes")
+    .select(NOTE_COLUMNS)
+    .eq("subject_type", "chapter")
+    .eq("subject_id", ch.id)
+    .order("pinned", { ascending: false })
+    .order("updated_at", { ascending: false });
+
   return (
+    <>
     <Editor
       action={saveChapter}
       id={ch.id}
@@ -50,6 +61,7 @@ export default async function EditChapter({
       status={ch.status}
       body={ch.body?.html ?? blocksToHtml(asDoc(ch.body).blocks)}
       dropcap
+      anchors
     >
       <Field
         label="chapter number"
@@ -77,5 +89,12 @@ export default async function EditChapter({
         type="datetime-local"
       />
     </Editor>
+    <NotesPanel
+      subjectType="chapter"
+      subjectId={ch.id}
+      initialNotes={(notes ?? []) as Note[]}
+      anchors
+    />
+    </>
   );
 }
