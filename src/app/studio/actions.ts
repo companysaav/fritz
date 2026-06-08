@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { requireAdmin } from "@/lib/auth";
 import { slugify } from "@/lib/slug";
+import { tidyBodyHtml } from "@/lib/content/sanitizeHtml";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type DB = ReturnType<typeof createAdminClient>;
@@ -30,8 +31,10 @@ function scheduleFields(formData: FormData): {
   return { status: str(formData, "status") || "draft" };
 }
 
-/** Store the WYSIWYG HTML body + derive search/stat fields from its text. */
-function buildBody(html: string) {
+/** Store the WYSIWYG HTML body + derive search/stat fields from its text.
+ *  Normalises pasted fonts/sizes and resolves {key}…{/key} font tags first. */
+function buildBody(rawHtml: string) {
+  const html = tidyBodyHtml(rawHtml);
   const text = html
     .replace(/<[^>]+>/g, " ")
     .replace(/&[a-z#0-9]+;/gi, " ")

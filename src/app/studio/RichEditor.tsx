@@ -8,7 +8,9 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
+import { stripInlineFonts } from "@/lib/content/sanitizeHtml";
 import { FritzInline } from "./FritzInline";
+import { FontTag, FONTS } from "./FontTag";
 
 /** Bleed-through palette — applied as inline colour to the selection. */
 const COLORS: { key: string; hex: string }[] = [
@@ -44,12 +46,17 @@ export function RichEditor({
       Image,
       Youtube.configure({ width: 640, height: 360, nocookie: true }),
       FritzInline,
+      FontTag,
     ],
     content: initialHTML || "<p></p>",
     editorProps: {
       attributes: {
         class: `prose-fritz ${dropcap ? "dropcap" : ""} min-h-[55vh] rounded-2xl border border-line bg-paper p-6 outline-none`,
       },
+      // Paste hygiene: strip the font-family / font-size that Docs/Word/web
+      // drag in, so pasted text inherits the one prose face instead of a
+      // patchwork. Colour (bleed-through) survives.
+      transformPastedHTML: (html) => stripInlineFonts(html),
     },
     onUpdate: ({ editor }) => setHtml(editor.getHTML()),
   });
@@ -170,10 +177,11 @@ export function RichEditor({
         </button>
         <button
           type="button"
+          title="scene / page break (or type --- )"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
           className={btn(false)}
         >
-          ―
+          ⁂ break
         </button>
 
         <span className="mx-1 h-5 w-px bg-line" />
@@ -202,6 +210,33 @@ export function RichEditor({
           className={btn(false)}
         >
           ⌫ colour
+        </button>
+
+        <span className="mx-1 h-5 w-px bg-line" />
+
+        {/* the font picker — select text, click a face (or type {key}…{/key}) */}
+        {FONTS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            title={`font: ${f.label} (select text first)`}
+            onClick={() =>
+              editor.chain().focus().setMark("fontTag", { font: f.key }).run()
+            }
+            className={`ff-${f.key} rounded-lg px-2 py-1 text-sm font-bold text-ink-soft hover:bg-paper-2 ${
+              editor.isActive("fontTag", { font: f.key }) ? "bg-ink !text-paper" : ""
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          title="remove font"
+          onClick={() => editor.chain().focus().unsetMark("fontTag").run()}
+          className={btn(false)}
+        >
+          ⌫ font
         </button>
 
         <span className="mx-1 h-5 w-px bg-line" />
