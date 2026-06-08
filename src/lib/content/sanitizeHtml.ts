@@ -52,7 +52,17 @@ export function applyFontTags(html: string): string {
   return out;
 }
 
-/** Full clean for storage/render: normalise fonts, then resolve font tags. */
+/** Turn a paragraph that's only a run of dashes/underscores/asterisks
+ *  (---, ___, ***, any length ≥ 3) into a real scene break. Catches the
+ *  literal separators that come in when a chapter is pasted from elsewhere. */
+export function resolveBreaks(html: string): string {
+  return html.replace(
+    /<p[^>]*>\s*(?:<br\s*\/?>\s*)*[-_*](?:\s*[-_*]){2,}\s*(?:<br\s*\/?>\s*)*<\/p>/gi,
+    "<hr>",
+  );
+}
+
+/** Full clean for storage/render: normalise fonts, resolve font tags + breaks. */
 export function tidyBodyHtml(html: string): string {
-  return applyFontTags(stripInlineFonts(html));
+  return resolveBreaks(applyFontTags(stripInlineFonts(html)));
 }
