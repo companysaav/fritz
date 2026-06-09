@@ -8,7 +8,13 @@ import StarterKit from "@tiptap/starter-kit";
 import { useEffect, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
-import { stripInlineFonts } from "@/lib/content/sanitizeHtml";
+import {
+  GROW_DEFAULT,
+  type FxKey,
+  normalizeFxList,
+  normalizeGrowScale,
+  stripInlineFonts,
+} from "@/lib/content/sanitizeHtml";
 import { FritzInline } from "./FritzInline";
 import { FontTag, FONTS } from "./FontTag";
 import { EffectTag, EFFECTS } from "./EffectTag";
@@ -23,6 +29,8 @@ const COLORS: { key: string; hex: string }[] = [
   { key: "rose", hex: "#b0306a" },
   { key: "ash", hex: "#6b5d4f" },
 ];
+
+const GROW_SCALES = [1, 1.2, 1.4, 1.6, GROW_DEFAULT, 2, 2.4, 3];
 
 export function RichEditor({
   initialHTML = "",
@@ -128,6 +136,42 @@ export function RichEditor({
     `rounded-lg px-2.5 py-1 text-sm font-bold transition-colors ${
       active ? "bg-ink text-paper" : "text-ink-soft hover:bg-paper-2"
     }`;
+
+  // effects stack: the current selection may carry several at once
+  const effectAttrs = editor.getAttributes("effectTag");
+  const activeFx = normalizeFxList(effectAttrs.fx);
+  const activeGrowScale = normalizeGrowScale(effectAttrs.grow ?? GROW_DEFAULT);
+  const growScaleOptions = Array.from(
+    new Set(GROW_SCALES.map((scale) => normalizeGrowScale(scale))),
+  );
+  const growScaleChoices = growScaleOptions.includes(activeGrowScale)
+    ? growScaleOptions
+    : [...growScaleOptions, activeGrowScale].sort((a, b) => Number(a) - Number(b));
+  const toggleFx = (key: FxKey) => {
+    const next = activeFx.includes(key)
+      ? activeFx.filter((k) => k !== key)
+      : [...activeFx, key];
+    const chain = editor.chain().focus();
+    if (next.length) {
+      chain
+        .setMark("effectTag", {
+          fx: next.join(" "),
+          ...(next.includes("grow") ? { grow: activeGrowScale } : {}),
+        })
+        .run();
+    } else {
+      chain.unsetMark("effectTag").run();
+    }
+  };
+  const setGrowScale = (value: string) => {
+    const grow = normalizeGrowScale(value);
+    const next = activeFx.includes("grow") ? activeFx : [...activeFx, "grow"];
+    editor
+      .chain()
+      .focus()
+      .setMark("effectTag", { fx: next.join(" "), grow })
+      .run();
+  };
 
   return (
     <div className="mt-6">
@@ -243,28 +287,56 @@ export function RichEditor({
 
         <span className="mx-1 h-5 w-px bg-line" />
 
-        {/* word effects — select text, click (or type {bounce}…{/bounce}) */}
-        {EFFECTS.map((fx) => (
-          <button
-            key={fx.key}
-            type="button"
-            title={`effect: ${fx.label} (select text first)`}
-            onClick={() =>
-              editor.chain().focus().setMark("effectTag", { fx: fx.key }).run()
-            }
-            className={`${btn(editor.isActive("effectTag", { fx: fx.key }))} fx-${fx.key}`}
+        {/* word effects — select text, click to toggle. Effects stack. */}
+        <details className="relative">
+          <summary
+            className={`${btn(activeFx.length > 0)} flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden`}
+            title="word effects"
           >
-            {fx.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          title="remove effect"
-          onClick={() => editor.chain().focus().unsetMark("effectTag").run()}
-          className={btn(false)}
-        >
-          ⌫ fx
-        </button>
+            fx
+            {activeFx.length > 0 && (
+              <span className="rounded bg-mustard px-1 text-[0.65rem] leading-4 text-ink">
+                {activeFx.length}
+              </span>
+            )}
+          </summary>
+          <div className="absolute left-0 top-full z-20 mt-2 grid w-64 grid-cols-2 gap-1 rounded-xl border border-line bg-paper p-2 shadow-xl">
+            {EFFECTS.map((fx) => (
+              <button
+                key={fx.key}
+                type="button"
+                title={`effect: ${fx.label} (select text first; effects stack)`}
+                onClick={() => toggleFx(fx.key)}
+                className={`${btn(activeFx.includes(fx.key))} text-left`}
+              >
+                {fx.label}
+              </button>
+            ))}
+            <label className="col-span-2 mt-1 flex items-center justify-between gap-2 border-t border-line pt-2 text-xs font-bold text-muted">
+              grow
+              <select
+                value={activeGrowScale}
+                onChange={(e) => setGrowScale(e.target.value)}
+                className="rounded-lg border border-line bg-paper px-2 py-1 text-sm font-bold text-ink outline-none"
+                title="grow amount"
+              >
+                {growScaleChoices.map((scale) => (
+                  <option key={scale} value={scale}>
+                    x{scale}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              title="remove all effects"
+              onClick={() => editor.chain().focus().unsetMark("effectTag").run()}
+              className={`${btn(false)} col-span-2 text-left`}
+            >
+              ⌫ fx
+            </button>
+          </div>
+        </details>
 
         <span className="mx-1 h-5 w-px bg-line" />
 
