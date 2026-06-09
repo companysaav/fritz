@@ -13,7 +13,7 @@
  * Keep FONT_KEYS in sync with lib/fonts.ts and the .ff-* classes in globals.css.
  */
 
-export const FONT_KEYS = ["mono", "type", "hand", "rune"] as const;
+export const FONT_KEYS = ["mono", "type", "hand", "rune", "chant"] as const;
 export type FontKey = (typeof FONT_KEYS)[number];
 
 export const FONT_LABELS: Record<FontKey, string> = {
@@ -21,6 +21,18 @@ export const FONT_LABELS: Record<FontKey, string> = {
   type: "typewriter",
   hand: "hand",
   rune: "rune",
+  chant: "chant",
+};
+
+/** Animated word effects, same {key}…{/key} mechanism as fonts.
+ *  bounce/shake loop gently; grow swells when scrolled into view (see ProseFX). */
+export const FX_KEYS = ["bounce", "shake", "grow"] as const;
+export type FxKey = (typeof FX_KEYS)[number];
+
+export const FX_LABELS: Record<FxKey, string> = {
+  bounce: "bounce",
+  shake: "shake",
+  grow: "grow",
 };
 
 /** Drop pasted font-family / font-size / line-height + <font> + Word mso-* junk.
@@ -52,6 +64,16 @@ export function applyFontTags(html: string): string {
   return out;
 }
 
+/** Convert typed {bounce|shake|grow}…{/…} effect tags into animated spans. */
+export function applyEffectTags(html: string): string {
+  let out = html;
+  for (const key of FX_KEYS) {
+    const re = new RegExp(`\\{${key}\\}([\\s\\S]*?)\\{\\/${key}\\}`, "gi");
+    out = out.replace(re, `<span data-fx="${key}" class="fx-${key}">$1</span>`);
+  }
+  return out;
+}
+
 /** Turn a paragraph that's only a run of dashes/underscores/asterisks
  *  (---, ___, ***, any length ≥ 3) into a real scene break. Catches the
  *  literal separators that come in when a chapter is pasted from elsewhere. */
@@ -62,7 +84,7 @@ export function resolveBreaks(html: string): string {
   );
 }
 
-/** Full clean for storage/render: normalise fonts, resolve font tags + breaks. */
+/** Full clean for storage/render: normalise fonts, resolve tags + breaks. */
 export function tidyBodyHtml(html: string): string {
-  return resolveBreaks(applyFontTags(stripInlineFonts(html)));
+  return resolveBreaks(applyEffectTags(applyFontTags(stripInlineFonts(html))));
 }

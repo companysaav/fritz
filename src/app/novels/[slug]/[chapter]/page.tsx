@@ -4,10 +4,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { asDoc, bodyHtml } from "@/lib/content/types";
-import { readingTime } from "@/lib/format";
+import { readingTime, wordCount } from "@/lib/format";
 import { getChapter } from "@/lib/queries";
 import { BlockRenderer } from "@/components/content/BlockRenderer";
 import { RichContent } from "@/components/content/RichContent";
+import { ProseFX } from "@/components/content/ProseFX";
 import { ChapterNav } from "@/components/reader/ChapterNav";
 import { ReadingProgress } from "@/components/reader/ReadingProgress";
 import { Soundtrack } from "@/components/reader/Soundtrack";
@@ -46,7 +47,8 @@ export default async function ChapterPage({ params }: Params) {
 
         <header className="mt-8 mb-10 text-center">
           <p className="text-xs font-bold uppercase tracking-widest text-muted">
-            Chapter {ch.number ?? position} of {total} ·{" "}
+            Chapter {ch.number ?? position} of {total}
+            {ch.word_count ? ` · ${wordCount(ch.word_count)}` : ""} ·{" "}
             {readingTime(ch.reading_time_minutes)}
           </p>
           <h1 className="mt-3 font-display text-4xl lowercase leading-tight text-ink sm:text-5xl">
@@ -70,6 +72,7 @@ export default async function ChapterPage({ params }: Params) {
         ) : (
           <BlockRenderer doc={asDoc(ch.body)} dropcap />
         )}
+        <ProseFX />
 
         {ch.author_note && (
           <aside className="mt-12 rounded-2xl border border-line bg-paper-2 p-5">

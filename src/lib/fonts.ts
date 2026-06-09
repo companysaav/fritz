@@ -6,6 +6,7 @@ import {
   Courier_Prime,
   Caveat,
   UnifrakturMaguntia,
+  Pirata_One,
 } from "next/font/google";
 
 /** Chunky, warm display face — the fritz voice. Wordmark + headlines only. */
@@ -65,5 +66,13 @@ export const rune = UnifrakturMaguntia({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-rune",
+  display: "swap",
+});
+
+/** {chant} — incantations / spoken spells. A heavier blackletter than {rune}. */
+export const chant = Pirata_One({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-chant",
   display: "swap",
 });

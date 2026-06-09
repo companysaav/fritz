@@ -208,6 +208,76 @@ body {
   font-size: 1.12em;
   letter-spacing: 0.01em;
 }
+.ff-chant {
+  font-family: var(--font-chant), "UnifrakturCook", serif;
+  font-size: 1.14em;
+  letter-spacing: 0.015em;
+}
+
+/* ---------------------------------------------------------------------------
+   Word effects — opt-in animated runs via {bounce|shake|grow}…{/…}.
+   Used sparingly; all of them stand down under prefers-reduced-motion.
+   --------------------------------------------------------------------------- */
+.fx-bounce {
+  display: inline-block;
+  animation: fx-bounce 1s ease-in-out infinite;
+}
+@keyframes fx-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.18em);
+  }
+}
+.fx-shake {
+  display: inline-block;
+  animation: fx-shake 0.4s ease-in-out infinite;
+}
+@keyframes fx-shake {
+  0%,
+  100% {
+    transform: translateX(0) rotate(0);
+  }
+  25% {
+    transform: translateX(-0.05em) rotate(-1.2deg);
+  }
+  75% {
+    transform: translateX(0.05em) rotate(1.2deg);
+  }
+}
+/* grow: normal until ProseFX adds .is-visible on scroll, then it swells + holds */
+.fx-grow {
+  display: inline-block;
+  transform-origin: center bottom;
+  transition:
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    color 0.9s ease;
+  will-change: transform;
+}
+.fx-grow.is-visible {
+  transform: scale(1.8);
+  color: var(--color-ember);
+}
+
+/* In the editor, mark a grow run so the author can see it (it won't scroll-fire
+   here). bounce/shake animate live so they preview themselves. */
+.ProseMirror .fx-grow {
+  text-decoration: underline dotted var(--color-ember);
+  text-underline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-bounce,
+  .fx-shake {
+    animation: none;
+  }
+  .fx-grow {
+    transition: none;
+    transform: none;
+  }
+}
 .prose-fritz div[data-youtube-video] {
   margin: 1.5em 0;
 }

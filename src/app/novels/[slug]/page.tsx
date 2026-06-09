@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { readingTime } from "@/lib/format";
+import { readingTime, readingTimeLong, wordCount } from "@/lib/format";
 import { getNovel } from "@/lib/queries";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -21,6 +21,12 @@ export default async function NovelPage({ params }: Params) {
   if (!novel) notFound();
 
   const accent = novel.accent_color ?? "var(--color-mustard)";
+
+  const totalWords = novel.chapters.reduce((n, c) => n + (c.word_count ?? 0), 0);
+  const totalMinutes = novel.chapters.reduce(
+    (n, c) => n + (c.reading_time_minutes ?? 0),
+    0,
+  );
 
   return (
     <div>
@@ -49,6 +55,20 @@ export default async function NovelPage({ params }: Params) {
             </h1>
             {novel.tagline && (
               <p className="mt-3 text-lg text-ink-soft">{novel.tagline}</p>
+            )}
+            {novel.chapters.length > 0 && (
+              <p className="mt-4 text-sm font-semibold text-muted">
+                {novel.chapters.length} chapter
+                {novel.chapters.length === 1 ? "" : "s"}
+                {totalWords > 0 && (
+                  <>
+                    {" · "}
+                    {wordCount(totalWords)}
+                    {" · "}
+                    {readingTimeLong(totalMinutes)}
+                  </>
+                )}
+              </p>
             )}
             {novel.chapters[0] && (
               <Link
@@ -89,6 +109,7 @@ export default async function NovelPage({ params }: Params) {
                   </span>
                 </span>
                 <span className="shrink-0 text-xs text-muted">
+                  {ch.word_count ? `${wordCount(ch.word_count)} · ` : ""}
                   {readingTime(ch.reading_time_minutes)}
                 </span>
               </Link>

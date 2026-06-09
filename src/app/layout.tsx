@@ -1,7 +1,16 @@
 import type { Metadata } from "next";
 
 import "./globals.css";
-import { body, display, sans, mono, typewriter, hand, rune } from "@/lib/fonts";
+import {
+  body,
+  display,
+  sans,
+  mono,
+  typewriter,
+  hand,
+  rune,
+  chant,
+} from "@/lib/fonts";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { WalkingFritz } from "@/components/site/WalkingFritz";
@@ -21,7 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} ${sans.variable} ${mono.variable} ${typewriter.variable} ${hand.variable} ${rune.variable} h-full antialiased`}
+      className={`${display.variable} ${body.variable} ${sans.variable} ${mono.variable} ${typewriter.variable} ${hand.variable} ${rune.variable} ${chant.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <Header />

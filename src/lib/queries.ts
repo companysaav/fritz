@@ -43,6 +43,7 @@ export type ChapterStub = {
   title: string;
   excerpt: string | null;
   reading_time_minutes: number | null;
+  word_count: number | null;
   published_at: string | null;
 };
 
@@ -131,7 +132,9 @@ export async function getNovel(slug: string): Promise<NovelFull | null> {
 
   const { data: chapters } = await supabase
     .from("chapters")
-    .select("id, slug, number, title, excerpt, reading_time_minutes, published_at")
+    .select(
+      "id, slug, number, title, excerpt, reading_time_minutes, word_count, published_at",
+    )
     .eq("novel_id", (novel as { id: string }).id)
     .order("number", { ascending: true });
 
@@ -160,7 +163,7 @@ export async function getChapter(novelSlug: string, chapterSlug: string) {
   const { data: chapters } = await supabase
     .from("chapters")
     .select(
-      "id, slug, number, title, excerpt, body, author_note, soundtrack, reading_time_minutes, published_at, hero:hero_media_id(url, alt)",
+      "id, slug, number, title, excerpt, body, author_note, soundtrack, reading_time_minutes, word_count, published_at, hero:hero_media_id(url, alt)",
     )
     .eq("novel_id", (novel as { id: string }).id)
     .order("number", { ascending: true });

@@ -8,6 +8,7 @@ import { formatDate, readingTime } from "@/lib/format";
 import { getPost } from "@/lib/queries";
 import { BlockRenderer } from "@/components/content/BlockRenderer";
 import { RichContent } from "@/components/content/RichContent";
+import { ProseFX } from "@/components/content/ProseFX";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -59,6 +60,7 @@ export default async function PostPage({ params }: Params) {
       ) : (
         <BlockRenderer doc={asDoc(post.body)} />
       )}
+      <ProseFX />
     </article>
   );
 }

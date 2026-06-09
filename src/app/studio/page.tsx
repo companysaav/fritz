@@ -1,10 +1,26 @@
 import Link from "next/link";
 
 import { requireAdmin } from "@/lib/auth";
+import { wordCount } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { deleteItem } from "./actions";
 
-type Row = { id: string; title: string; status?: string; visibility?: string };
+type Row = {
+  id: string;
+  title: string;
+  status?: string;
+  visibility?: string;
+  word_count?: number | null;
+};
+
+function WordTag({ count }: { count?: number | null }) {
+  if (!count) return null;
+  return (
+    <span className="shrink-0 text-xs tabular-nums text-muted">
+      {wordCount(count)}
+    </span>
+  );
+}
 
 function StatusPill({ value }: { value?: string }) {
   const live = value === "published";
@@ -37,7 +53,7 @@ export default async function StudioDashboard() {
 
   const { data: posts } = await supabase
     .from("posts")
-    .select("id, title, status")
+    .select("id, title, status, word_count")
     .order("updated_at", { ascending: false });
 
   const { data: novels } = await supabase
@@ -47,13 +63,16 @@ export default async function StudioDashboard() {
 
   const novelList = (novels ?? []) as Row[];
   const chaptersByNovel: Record<string, Row[]> = {};
+  const novelWords: Record<string, number> = {};
   for (const n of novelList) {
     const { data: chs } = await supabase
       .from("chapters")
-      .select("id, title, status, number")
+      .select("id, title, status, number, word_count")
       .eq("novel_id", n.id)
       .order("number", { ascending: true });
-    chaptersByNovel[n.id] = (chs ?? []) as Row[];
+    const list = (chs ?? []) as Row[];
+    chaptersByNovel[n.id] = list;
+    novelWords[n.id] = list.reduce((sum, c) => sum + (c.word_count ?? 0), 0);
   }
 
   return (
@@ -88,7 +107,10 @@ export default async function StudioDashboard() {
                 {p.title}
                 <StatusPill value={p.status} />
               </Link>
-              <DeleteButton table="posts" id={p.id} />
+              <div className="flex items-center gap-4">
+                <WordTag count={p.word_count} />
+                <DeleteButton table="posts" id={p.id} />
+              </div>
             </li>
           ))}
         </ul>
@@ -122,6 +144,7 @@ export default async function StudioDashboard() {
                   <StatusPill value={n.visibility} />
                 </Link>
                 <div className="flex items-center gap-4">
+                  <WordTag count={novelWords[n.id]} />
                   <Link
                     href={`/studio/novels/${n.id}/chapters/new`}
                     className="text-sm font-bold text-ember hover:underline"
@@ -147,7 +170,10 @@ export default async function StudioDashboard() {
                       {c.title}
                       <StatusPill value={c.status} />
                     </Link>
-                    <DeleteButton table="chapters" id={c.id} />
+                    <div className="flex items-center gap-4">
+                      <WordTag count={c.word_count} />
+                      <DeleteButton table="chapters" id={c.id} />
+                    </div>
                   </li>
                 ))}
               </ul>

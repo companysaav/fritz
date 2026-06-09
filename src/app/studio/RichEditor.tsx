@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { stripInlineFonts } from "@/lib/content/sanitizeHtml";
 import { FritzInline } from "./FritzInline";
 import { FontTag, FONTS } from "./FontTag";
+import { EffectTag, EFFECTS } from "./EffectTag";
 
 /** Bleed-through palette — applied as inline colour to the selection. */
 const COLORS: { key: string; hex: string }[] = [
@@ -47,6 +48,7 @@ export function RichEditor({
       Youtube.configure({ width: 640, height: 360, nocookie: true }),
       FritzInline,
       FontTag,
+      EffectTag,
     ],
     content: initialHTML || "<p></p>",
     editorProps: {
@@ -241,6 +243,31 @@ export function RichEditor({
 
         <span className="mx-1 h-5 w-px bg-line" />
 
+        {/* word effects — select text, click (or type {bounce}…{/bounce}) */}
+        {EFFECTS.map((fx) => (
+          <button
+            key={fx.key}
+            type="button"
+            title={`effect: ${fx.label} (select text first)`}
+            onClick={() =>
+              editor.chain().focus().setMark("effectTag", { fx: fx.key }).run()
+            }
+            className={`${btn(editor.isActive("effectTag", { fx: fx.key }))} fx-${fx.key}`}
+          >
+            {fx.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          title="remove effect"
+          onClick={() => editor.chain().focus().unsetMark("effectTag").run()}
+          className={btn(false)}
+        >
+          ⌫ fx
+        </button>
+
+        <span className="mx-1 h-5 w-px bg-line" />
+
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
@@ -306,10 +333,26 @@ export function RichEditor({
 
       <EditorContent editor={editor} />
 
-      <p className="mt-3 text-xs leading-relaxed text-muted">
-        Select any words and hit a colour to make a skill / class / system line
-        bleed through. Plain text stays plain.
-      </p>
+      {(() => {
+        const text = html
+          .replace(/<[^>]+>/g, " ")
+          .replace(/&[a-z#0-9]+;/gi, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        const words = text ? text.split(" ").length : 0;
+        const mins = Math.max(1, Math.round(words / 220));
+        return (
+          <p className="mt-3 flex items-center justify-between gap-3 text-xs font-bold text-muted">
+            <span className="font-normal leading-relaxed">
+              Select any words and hit a colour to make a skill / class / system
+              line bleed through. Plain text stays plain.
+            </span>
+            <span className="shrink-0 tabular-nums">
+              {words.toLocaleString()} words · {mins} min
+            </span>
+          </p>
+        );
+      })()}
     </div>
   );
 }
