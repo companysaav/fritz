@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth";
 import { wordCount } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { deleteItem } from "./actions";
+import { ExportActions } from "./ExportActions";
 
 type Row = {
   id: string;
@@ -109,6 +110,7 @@ export default async function StudioDashboard() {
               </Link>
               <div className="flex items-center gap-4">
                 <WordTag count={p.word_count} />
+                <ExportActions href={`/studio/export/posts/${p.id}`} compact />
                 <DeleteButton table="posts" id={p.id} />
               </div>
             </li>
@@ -145,6 +147,7 @@ export default async function StudioDashboard() {
                 </Link>
                 <div className="flex items-center gap-4">
                   <WordTag count={novelWords[n.id]} />
+                  <ExportActions href={`/studio/export/novels/${n.id}`} compact />
                   <Link
                     href={`/studio/novels/${n.id}/chapters/new`}
                     className="text-sm font-bold text-ember hover:underline"

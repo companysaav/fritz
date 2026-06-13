@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
+import { ExportActions } from "@/app/studio/ExportActions";
 import { saveNovel } from "@/app/studio/actions";
 import { NotesPanel } from "@/app/studio/notes/NotesPanel";
 import { NoteRollup, type RollupChapter } from "@/app/studio/notes/NoteRollup";
@@ -99,6 +100,7 @@ export default async function EditNovel({
         hideStatus
         hideBody
       >
+        <ExportActions href={`/studio/export/novels/${novel.id}`} />
         <Field
           label="cover image url"
           name="cover_url"
