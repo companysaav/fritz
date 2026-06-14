@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
+import { ImageDropzone } from "@/app/studio/ImageDropzone";
 import { saveNovel } from "@/app/studio/actions";
 
 const STATUSES = ["ongoing", "hiatus", "completed", "draft"];
@@ -8,7 +9,7 @@ export default async function NewNovel() {
   await requireAdmin();
   return (
     <Editor action={saveNovel} hideStatus hideBody>
-      <Field label="cover image url" name="cover_url" placeholder="https://…" />
+      <ImageDropzone label="cover image" name="cover_url" kind="novel-cover" />
       <Field label="tagline" name="tagline" />
       <TextArea label="synopsis" name="synopsis" />
       <Field label="accent colour" name="accent_color" placeholder="#E4572E" />

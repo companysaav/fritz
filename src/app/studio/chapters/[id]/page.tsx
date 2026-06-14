@@ -5,6 +5,7 @@ import { asDoc } from "@/lib/content/types";
 import { blocksToHtml } from "@/lib/content/blocksToHtml";
 import { createClient } from "@/lib/supabase/server";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
+import { ImageDropzone } from "@/app/studio/ImageDropzone";
 import { saveChapter } from "@/app/studio/actions";
 import { NotesPanel } from "@/app/studio/notes/NotesPanel";
 import { NOTE_COLUMNS, type Note } from "@/app/studio/notes/types";
@@ -68,10 +69,11 @@ export default async function EditChapter({
         name="number"
         defaultValue={ch.number != null ? String(ch.number) : ""}
       />
-      <Field
-        label="hero image url"
+      <ImageDropzone
+        label="hero image"
         name="hero_url"
         defaultValue={ch.hero?.url ?? ""}
+        kind="chapter-hero"
       />
       <Field
         label="ambience (youtube id)"

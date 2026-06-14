@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
+import { ImageDropzone } from "@/app/studio/ImageDropzone";
 import { saveChapter } from "@/app/studio/actions";
 
 export default async function NewChapter({
@@ -12,7 +13,7 @@ export default async function NewChapter({
   return (
     <Editor action={saveChapter} novelId={id} dropcap>
       <Field label="chapter number" name="number" placeholder="1" />
-      <Field label="hero image url" name="hero_url" placeholder="https://…" />
+      <ImageDropzone label="hero image" name="hero_url" kind="chapter-hero" />
       <Field
         label="ambience (youtube id)"
         name="soundtrack_youtube"

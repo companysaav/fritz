@@ -5,6 +5,7 @@ import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Editor, Field, TextArea } from "@/app/studio/Editor";
 import { ExportActions } from "@/app/studio/ExportActions";
+import { ImageDropzone } from "@/app/studio/ImageDropzone";
 import { saveNovel } from "@/app/studio/actions";
 import { NotesPanel } from "@/app/studio/notes/NotesPanel";
 import { NoteRollup, type RollupChapter } from "@/app/studio/notes/NoteRollup";
@@ -101,10 +102,11 @@ export default async function EditNovel({
         hideBody
       >
         <ExportActions href={`/studio/export/novels/${novel.id}`} />
-        <Field
-          label="cover image url"
+        <ImageDropzone
+          label="cover image"
           name="cover_url"
           defaultValue={novel.cover?.url ?? ""}
+          kind="novel-cover"
         />
         <Field label="tagline" name="tagline" defaultValue={novel.tagline ?? ""} />
         <TextArea
